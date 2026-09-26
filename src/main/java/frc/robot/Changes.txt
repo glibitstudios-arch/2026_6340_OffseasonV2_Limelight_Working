@@ -1,0 +1,50 @@
+added port forwarding in Robot.java:
+    PortForwarder.add(5801, "172.29.0.1", 5801);
+    PortForwarder.add(5802, "172.29.0.1", 5802);
+    PortForwarder.add(5803, "172.29.0.1", 5803);
+    PortForwarder.add(5804, "172.29.0.1", 5804);
+    PortForwarder.add(5805, "172.29.0.1", 5805);
+    PortForwarder.add(5806, "172.29.0.1", 5806);
+    PortForwarder.add(5807, "172.29.0.1", 5807);
+    PortForwarder.add(5808, "172.29.0.1", 5808);
+    PortForwarder.add(5809, "172.29.0.1", 5809);
+    
+    PortForwarder.add(5800, "172.29.0.1", 5800); 
+
+Added Mega Tag 2 to swerve subsystem:
+@Override
+public void periodic() {
+    
+    boolean doRejectUpdate = false;
+
+    //get pos/odomatry from YAGSL
+    double currentYawDegrees = swerveDrive.getOdometryHeading().getDegrees();
+
+    //give odomatry TO the Robot for rotation
+    LimelightHelpers.SetRobotOrientation(
+        "limelight", 
+        currentYawDegrees, 
+        0, 0, 0, 0, 0
+    );
+
+    //get megatag2 calculations
+    LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+
+    //Makes sure if spinny to fast STOP reading
+    if (Math.abs(swerveDrive.getGyro().getRawGyro().getRate()) > 360) {
+        doRejectUpdate = true;
+    }
+    if (mt2.tagCount == 0) {
+        doRejectUpdate = true;
+    }
+
+    //give the pos Mega tag tingy pos to YAGSL
+    if (!doRejectUpdate) {
+        //999999999999999999 makes it use the gyro and trust it fully
+        swerveDrive.addVisionMeasurement(
+            mt2.pose, 
+            mt2.timestampSeconds, 
+            VecBuilder.fill(0.7, 0.7, 9999999)
+        );
+    }
+}

@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.net.PortForwarder;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
+  
 
   private final RobotContainer m_robotContainer;
 
@@ -24,6 +26,17 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
+    PortForwarder.add(5801, "172.29.0.1", 5801);
+    PortForwarder.add(5802, "172.29.0.1", 5802);
+    PortForwarder.add(5803, "172.29.0.1", 5803);
+    PortForwarder.add(5804, "172.29.0.1", 5804);
+    PortForwarder.add(5805, "172.29.0.1", 5805);
+    PortForwarder.add(5806, "172.29.0.1", 5806);
+    PortForwarder.add(5807, "172.29.0.1", 5807);
+    PortForwarder.add(5808, "172.29.0.1", 5808);
+    PortForwarder.add(5809, "172.29.0.1", 5809);
+    
+    PortForwarder.add(5800, "172.29.0.1", 5800); 
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
@@ -44,6 +57,8 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+
+
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

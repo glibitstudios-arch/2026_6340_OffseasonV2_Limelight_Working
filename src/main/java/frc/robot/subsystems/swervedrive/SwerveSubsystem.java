@@ -63,6 +63,9 @@ import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
+import edu.wpi.first.math.VecBuilder;
+import frc.robot.LimelightHelpers; 
+
 
 public class SwerveSubsystem extends SubsystemBase
 {
@@ -124,6 +127,7 @@ public class SwerveSubsystem extends SubsystemBase
 
     //adjusting gyro
     swerveDrive.getGyro().setOffset(new Rotation3d(0, 0, Math.PI));
+
 
     // POSE ESTIMATOR FOR BETTER AIMING - UNTESTED
   //   poseEstimator = new SwerveDrivePoseEstimator(
@@ -191,11 +195,42 @@ public class SwerveSubsystem extends SubsystemBase
     poseRot.append(pose.getRotation().getRadians());
   }
 
-  @Override
-  public void periodic()
-  {
+@Override
+public void periodic() {
+    
+    boolean doRejectUpdate = false;
 
-  }
+    //get pos/odomatry from YAGSL
+    double currentYawDegrees = swerveDrive.getOdometryHeading().getDegrees();
+
+    //give odomatry TO the Robot for rotation
+    LimelightHelpers.SetRobotOrientation(
+        "limelight", 
+        currentYawDegrees, 
+        0, 0, 0, 0, 0
+    );
+
+    //get megatag2 calculations
+    LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+
+    //Makes sure if spinny to fast STOP reading
+    if (Math.abs(swerveDrive.getGyro().getRawGyro().getRate()) > 360) {
+        doRejectUpdate = true;
+    }
+    if (mt2.tagCount == 0) {
+        doRejectUpdate = true;
+    }
+
+    //give the pos Mega tag tingy pos to YAGSL
+    if (!doRejectUpdate) {
+        //9999999999999 makes it use the gyro and trust it fully
+        swerveDrive.addVisionMeasurement(
+            mt2.pose, 
+            mt2.timestampSeconds, 
+            VecBuilder.fill(0.7, 0.7, 9999999)
+        );
+    }
+}
 
 
   @Override
