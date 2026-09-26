@@ -135,7 +135,7 @@ public class SwerveSubsystem extends SubsystemBase
     //   getHeading(),
     //   swerveDrive.getModulePositions(),
     //   startingPose);
-    // limTable = NetworkTableInstance.getDefault().getTable("limelight");
+    limTable = NetworkTableInstance.getDefault().getTable("limelight");
     RobotConfig config;
     try{
       config = RobotConfig.fromGUISettings();
@@ -200,7 +200,7 @@ public void periodic() {
     
     boolean doRejectUpdate = false;
 
-    //get pos/odomatry from YAGSL
+    //get pos/roration/odomatry from YAGSL
     double currentYawDegrees = swerveDrive.getOdometryHeading().getDegrees();
 
     //give odomatry TO the Robot for rotation
@@ -213,7 +213,7 @@ public void periodic() {
     //get megatag2 calculations
     LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
 
-    //Makes sure if spinny to fast STOP reading
+    //Makes sure it spins to fast STOP reading
     if (Math.abs(swerveDrive.getGyro().getRawGyro().getRate()) > 360) {
         doRejectUpdate = true;
     }
@@ -221,15 +221,18 @@ public void periodic() {
         doRejectUpdate = true;
     }
 
-    //give the pos Mega tag tingy pos to YAGSL
+    //give the pos to YAGSL
     if (!doRejectUpdate) {
-        //9999999999999 makes it use the gyro and trust it fully
+        //999999999999999999 makes it use the gyro and trust it fully
         swerveDrive.addVisionMeasurement(
             mt2.pose, 
             mt2.timestampSeconds, 
             VecBuilder.fill(0.7, 0.7, 9999999)
         );
     }
+
+    //log the pose
+    logPose();
 }
 
 
