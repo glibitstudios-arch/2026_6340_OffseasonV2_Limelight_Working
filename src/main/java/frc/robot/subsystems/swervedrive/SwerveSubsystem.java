@@ -15,6 +15,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 //import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -240,9 +241,6 @@ public void periodic() {
   public void simulationPeriodic()
   {
   }
-
-
- 
 
   /**
    * Get the path follower with events.
@@ -716,6 +714,54 @@ public void periodic() {
     return swerveDrive;
   }
 
+  private double pointingError(Translation2d target) {
+    Pose2d pose = getPose();
+    double targetAngle = Math.atan2(
+        target.getY() - pose.getY(),
+        target.getX() - pose.getX());
+
+    double error = targetAngle - pose.getRotation().getRadians();
+    return Math.atan2(Math.sin(error), Math.cos(error));
+  }
+
+  public Command pointAt(Translation2d target) {
+    return Commands.run(() -> {
+      double maxTurn = swerveDrive.getMaximumChassisAngularVelocity();
+      double turn = Math.max(-maxTurn, Math.min(maxTurn, 4.0 * pointingError(target)));
+      drive(new Translation2d(), turn, false);
+    }, this)
+    .until(() -> Math.abs(pointingError(target)) < Math.toRadians(2))
+    .finallyDo(interrupted -> drive(new Translation2d(), 0, false));
+  }
+
+  public Command driveAndPointAt(Translation2d target, DoubleSupplier translationX,
+                                 DoubleSupplier translationY) {
+    return Commands.run(() -> {
+      double x = translationX.getAsDouble();
+      double y = translationY.getAsDouble();
+      
+      //adds a controlor dead zone
+      if (Math.abs(x) < 0.1) x = 0;
+      if (Math.abs(y) < 0.1) y = 0;
+
+      //Just in case the aliance forcing fails and it flips to red the code with still work
+      var alliance = DriverStation.getAlliance();
+      if (alliance.isPresent() && alliance.get() == Alliance.Red) {
+        x = -x;
+        y = -y;
+      }
+
+      Translation2d translation = SwerveMath.scaleTranslation(
+          //speed limiter to 50% when aming
+          new Translation2d(x, y), 0.5).times(swerveDrive.getMaximumChassisVelocity());
+      double maxTurn = swerveDrive.getMaximumChassisAngularVelocity();
+      double turn = Math.max(-maxTurn, Math.min(maxTurn, 4.0 * pointingError(target)));
+      drive(translation, turn, true);
+    }, this)
+    // If interupted stop the auto aim
+    .finallyDo(interrupted -> drive(new Translation2d(), 0, false));
+  }
+  
   public Command zeroGyroCommand() {
     return Commands.runOnce(() -> zeroGyro());
   }

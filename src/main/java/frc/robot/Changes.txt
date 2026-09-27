@@ -53,3 +53,79 @@ public void periodic() {
 }
 I uncommented a line in swerveSubsystem to enable cammra:
     limTable = NetworkTableInstance.getDefault().getTable("limelight");
+
+Added point and rotate code to swerveSubsystem using atan2:
+
+  private double pointingError(Translation2d target) {
+    Pose2d pose = getPose();
+    double targetAngle = Math.atan2(
+        target.getY() - pose.getY(),
+        target.getX() - pose.getX());
+
+    double error = targetAngle - pose.getRotation().getRadians();
+    return Math.atan2(Math.sin(error), Math.cos(error));
+  }
+
+  public Command pointAt(Translation2d target) {
+    return Commands.run(() -> {
+      double maxTurn = swerveDrive.getMaximumChassisAngularVelocity();
+      double turn = Math.max(-maxTurn, Math.min(maxTurn, 4.0 * pointingError(target)));
+      drive(new Translation2d(), turn, false);
+    }, this)
+    .until(() -> Math.abs(pointingError(target)) < Math.toRadians(2))
+    .finallyDo(interrupted -> drive(new Translation2d(), 0, false));
+  }
+
+  public Command driveAndPointAt(Translation2d target, DoubleSupplier translationX,
+                                 DoubleSupplier translationY) {
+    return Commands.run(() -> {
+      double x = translationX.getAsDouble();
+      double y = translationY.getAsDouble();
+      
+      //adds a controlor dead zone
+      if (Math.abs(x) < 0.1) x = 0;
+      if (Math.abs(y) < 0.1) y = 0;
+
+      //Just in case the aliance forcing fails and it flips to red the code with still work
+      var alliance = DriverStation.getAlliance();
+      if (alliance.isPresent() && alliance.get() == Alliance.Red) {
+        x = -x;
+        y = -y;
+      }
+
+      Translation2d translation = SwerveMath.scaleTranslation(
+          //speed limiter to 50% when aming
+          new Translation2d(x, y), 0.5).times(swerveDrive.getMaximumChassisVelocity());
+      double maxTurn = swerveDrive.getMaximumChassisAngularVelocity();
+      double turn = Math.max(-maxTurn, Math.min(maxTurn, 4.0 * pointingError(target)));
+      drive(translation, turn, true);
+    }, this)
+    // If interupted stop the auto aim
+    .finallyDo(interrupted -> drive(new Translation2d(), 0, false));
+  }
+
+Added in RobotContainer the comand that alows to aim while moving:
+    Command driveAndPointAtHub = Commands.defer(
+        () -> drivebase.driveAndPointAt(
+            getAllianceHubCenter(),
+            () -> -driverXbox.getLeftY(),
+            () -> -driverXbox.getLeftX()),
+        Set.of(drivebase));
+
+    operatorXbox.y().onTrue(driveAndPointAtHub);
+    operatorXbox.a().onTrue(Commands.runOnce(driveAndPointAtHub::cancel));
+
+Added in RobotContainer the hub locations for rotation:
+    private Translation2d getAllianceHubCenter() {
+    boolean red = DriverStation.getAlliance()
+        .orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Red;
+
+    return red
+        ? new Translation2d(11.91, 4.03)
+        : new Translation2d(4.63, 4.03);
+    }
+
+Added Auto aim comand that points the robot at the hub.
+    NamedCommands.registerCommand("Point at Hub", Commands.defer(
+        () -> drivebase.pointAt(getAllianceHubCenter()),
+        Set.of(drivebase)));

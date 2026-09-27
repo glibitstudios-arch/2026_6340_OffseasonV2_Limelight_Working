@@ -18,6 +18,10 @@ import frc.robot.Constants.LauncherConstants;
 
 import java.io.File;
 
+import java.util.Set;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+
 import com.fasterxml.jackson.databind.util.Named;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -151,6 +155,9 @@ public class RobotContainer {
     NamedCommands.registerCommand("Hood Mid", launcherSubsystem.setHoodPositionCommand(8));
     NamedCommands.registerCommand("Intake Up", intakeSubsystem.intakeUpCommand());
     NamedCommands.registerCommand("Hood Down", launcherSubsystem.setHoodPositionCommand(1.5));
+    NamedCommands.registerCommand("Point at Hub", Commands.defer(
+        () -> drivebase.pointAt(getAllianceHubCenter()),
+        Set.of(drivebase)));
 
     //launcherSubsystem = new LauncherSubsystem();
     // add auto options to SmartDashboard
@@ -234,6 +241,16 @@ public class RobotContainer {
     
     operatorXbox.leftTrigger().whileTrue(intakeSubsystem.setRollerSpeedCommand(Constants.IntakeConstants.REVERSE_ROLLER_SPEED));
 
+    Command driveAndPointAtHub = Commands.defer(
+        () -> drivebase.driveAndPointAt(
+            getAllianceHubCenter(),
+            () -> -driverXbox.getLeftY(),
+            () -> -driverXbox.getLeftX()),
+        Set.of(drivebase));
+
+    operatorXbox.y().onTrue(driveAndPointAtHub);
+    operatorXbox.a().onTrue(Commands.runOnce(driveAndPointAtHub::cancel));
+    
     operatorXbox.y().onTrue(launcherSubsystem.setShooterVelocityCommand(Constants.LauncherConstants.FAR_SHOOTER_VELOCITY));
                                                        
     operatorXbox.b().onTrue(launcherSubsystem.setShooterVelocityCommand(Constants.LauncherConstants.MID_SHOOTER_VELOCITY));
@@ -269,6 +286,15 @@ public class RobotContainer {
     
 
 
+  }
+
+  private Translation2d getAllianceHubCenter() {
+    boolean red = DriverStation.getAlliance()
+        .orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Red;
+
+    return red
+        ? new Translation2d(11.91, 4.03)
+        : new Translation2d(4.63, 4.03);
   }
 
   /**
