@@ -215,7 +215,7 @@ public void periodic() {
     LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
 
     //Makes sure it spins to fast STOP reading
-    if (Math.abs(swerveDrive.getGyro().getRawGyro().getRate()) > 360) {
+    if (Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(edu.wpi.first.units.Units.DegreesPerSecond)) > 360) {
         doRejectUpdate = true;
     }
     if (mt2.tagCount == 0) {
