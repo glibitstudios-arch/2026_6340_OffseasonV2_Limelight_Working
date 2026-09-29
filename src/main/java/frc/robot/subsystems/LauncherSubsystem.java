@@ -22,6 +22,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import tinyspline.BSpline;
+
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -165,6 +167,24 @@ public class LauncherSubsystem extends SubsystemBase {
 
   }
 
+  public static double[] getCurvedAngle(double x) {
+
+    double[] points = {
+        10, 3000, 20,
+        20, 4000, 30,
+        30, 5000, 40
+    };
+
+    BSpline spline = BSpline.interpolateCubicNatural(points, 3)
+            .tension(0.5);
+
+
+    double u = (x - points[0]) / (points[6] - points[0]);
+
+    double[] p = spline.eval(u).result();
+
+    return new double[] {p[1], p[2]};
+  }
 
   public void setRightShooterVelocity(double velocity){
     rightShooter.setControl(shooter_request.withVelocity(velocity).withFeedForward(0.5));
