@@ -22,7 +22,11 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import tinyspline.BSpline;
+import java.util.Arrays;
+import java.util.List;
+
+import org.tinyspline.BSpline;
+import org.tinyspline.DeBoorNet;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
@@ -169,21 +173,22 @@ public class LauncherSubsystem extends SubsystemBase {
 
   public static double[] getCurvedAngle(double x) {
 
-    double[] points = {
-        10, 3000, 20,
-        20, 4000, 30,
-        30, 5000, 40
-    };
+    List<Double> points = Arrays.asList(
+        10.0, 3000.0, 20.0,
+        20.0, 4000.0, 30.0,
+        30.0, 5000.0, 40.0
+    );
 
     BSpline spline = BSpline.interpolateCubicNatural(points, 3)
             .tension(0.5);
 
+    double u = (x - points.get(0)) / (points.get(6) - points.get(0));
+    u = Math.max(0.0, Math.min(1.0, u));
 
-    double u = (x - points[0]) / (points[6] - points[0]);
+    DeBoorNet net = spline.eval(u);
+    List<Double> p = net.getPoints(); 
 
-    double[] p = spline.eval(u).result();
-
-    return new double[] {p[1], p[2]};
+    return new double[] { p.get(1), p.get(2) };
   }
 
   public void setRightShooterVelocity(double velocity){
