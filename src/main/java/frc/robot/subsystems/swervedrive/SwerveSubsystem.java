@@ -738,7 +738,7 @@ public void periodic() {
     .finallyDo(interrupted -> drive(new Translation2d(), 0, false));
   }
 
-  public Command driveAndPointAt(Translation2d target, DoubleSupplier translationX,
+  public Command driveAndPointAt(LauncherSubsystem launcher, Translation2d target, DoubleSupplier translationX,
                                  DoubleSupplier translationY) {
     
     return Commands.run(() -> {
@@ -746,7 +746,7 @@ public void periodic() {
       double currentDistance = swerveDrive.getPose().getTranslation().getDistance(target);
       
       //give the curve the distance the set the motors.
-      LauncherSubsystem.getCurvedAngle(currentDistance);
+      launcher.getCurvedAngle(currentDistance);
 
       double x = translationX.getAsDouble();
       double y = translationY.getAsDouble();

@@ -243,6 +243,7 @@ public class RobotContainer {
 
     Command driveAndPointAtHub = Commands.defer(
         () -> drivebase.driveAndPointAt(
+            launcherSubsystem,
             getAllianceHubCenter(),
             () -> -driverXbox.getLeftY(),
             () -> -driverXbox.getLeftX()),

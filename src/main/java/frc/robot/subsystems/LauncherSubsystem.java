@@ -174,7 +174,7 @@ public class LauncherSubsystem extends SubsystemBase {
   public double[] getCurvedAngle(double x) {
     //1 distance 2 RPM 3 Hood angle
     List<Double> points = Arrays.asList(
-        10.0, 3000.0, 20.0,
+        10.0, 3000.0, 20.0,//EXAMPLE NOT FINAL CHANGE
         20.0, 4000.0, 30.0,
         30.0, 5000.0, 40.0
     );
