@@ -48,6 +48,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -55,6 +56,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
@@ -66,6 +68,7 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 import edu.wpi.first.math.VecBuilder;
 import frc.robot.LimelightHelpers; 
+import frc.robot.subsystems.LauncherSubsystem;
 
 
 public class SwerveSubsystem extends SubsystemBase
@@ -725,6 +728,7 @@ public void periodic() {
   }
 
   public Command pointAt(Translation2d target) {
+    
     return Commands.run(() -> {
       double maxTurn = swerveDrive.getMaximumChassisAngularVelocity();
       double turn = Math.max(-maxTurn, Math.min(maxTurn, 4.0 * pointingError(target)));
@@ -736,7 +740,14 @@ public void periodic() {
 
   public Command driveAndPointAt(Translation2d target, DoubleSupplier translationX,
                                  DoubleSupplier translationY) {
+    
     return Commands.run(() -> {
+      //Gets pos/distance
+      double currentDistance = swerveDrive.getPose().getTranslation().getDistance(target);
+      
+      //give the curve the distance the set the motors.
+      LauncherSubsystem.getCurvedAngle(currentDistance);
+
       double x = translationX.getAsDouble();
       double y = translationY.getAsDouble();
       
@@ -750,7 +761,6 @@ public void periodic() {
         x = -x;
         y = -y;
       }
-
       Translation2d translation = SwerveMath.scaleTranslation(
           //speed limiter to 50% when aming
           new Translation2d(x, y), 0.5).times(swerveDrive.getMaximumChassisVelocity());

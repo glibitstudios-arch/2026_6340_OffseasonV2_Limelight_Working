@@ -171,8 +171,8 @@ public class LauncherSubsystem extends SubsystemBase {
 
   }
 
-  public static double[] getCurvedAngle(double x) {
-
+  public double[] getCurvedAngle(double x) {
+    //1 distance 2 RPM 3 Hood angle
     List<Double> points = Arrays.asList(
         10.0, 3000.0, 20.0,
         20.0, 4000.0, 30.0,
@@ -188,7 +188,14 @@ public class LauncherSubsystem extends SubsystemBase {
     DeBoorNet net = spline.eval(u);
     List<Double> p = net.getPoints(); 
 
-    return new double[] { p.get(1), p.get(2) };
+    //sets shooter velocity
+    setShooterVelocity(p.get(1).doubleValue());
+
+    //sets hood angle
+    setHoodPos(p.get(2).doubleValue());
+
+    return new double[] { p.get(1).doubleValue(), p.get(2).doubleValue() };
+    
   }
 
   public void setRightShooterVelocity(double velocity){

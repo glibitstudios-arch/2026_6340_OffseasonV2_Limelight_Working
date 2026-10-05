@@ -248,8 +248,11 @@ public class RobotContainer {
             () -> -driverXbox.getLeftX()),
         Set.of(drivebase));
 
-    operatorXbox.y().onTrue(driveAndPointAtHub);
+    operatorXbox.x().onTrue(driveAndPointAtHub);
     operatorXbox.a().onTrue(Commands.runOnce(driveAndPointAtHub::cancel));
+
+    //Forces you to hold the button
+    //operatorXbox.x().whileTrue(driveAndPointAtHub);
     
     operatorXbox.y().onTrue(launcherSubsystem.setShooterVelocityCommand(Constants.LauncherConstants.FAR_SHOOTER_VELOCITY));
                                                        
@@ -257,7 +260,7 @@ public class RobotContainer {
 
     operatorXbox.a().onTrue(launcherSubsystem.stopShooterCommand());
 
-    operatorXbox.x().onTrue(launcherSubsystem.setShooterVelocityCommand(Constants.LauncherConstants.NEAR_SHOOTER_VELOCITY));
+    //operatorXbox.x().onTrue(launcherSubsystem.setShooterVelocityCommand(Constants.LauncherConstants.NEAR_SHOOTER_VELOCITY));
     //practice controls
 
 
